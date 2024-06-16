@@ -20,7 +20,15 @@ handleURLfn().then(dataArray => {
         } else {
           console.log("文件夹已存在，无需创建");
         }
-        fs.writeFile(folderPath + '/' + content.title + ".txt", content.fullText, function (err) {
+
+        let filePath = folderPath + '/' + content.title + ".txt";
+
+        if (fs.existsSync(filePath)) {
+          console.log("文件已存在，跳过写入操作");
+          return;
+        }
+
+        fs.writeFile(filePath, content.fullText, function (err) {
           if (err) {
             return console.log(err);
           }
@@ -29,7 +37,7 @@ handleURLfn().then(dataArray => {
 
       })
       .catch(error => {
-        Errwritefile(uurl,error)
+        Errwritefile(uurl, error)
       });
   })).then(() => {
     console.log('所有页面内容处理完成');

@@ -11,7 +11,7 @@ function handleURLfn() {
         let dataArray = [];  
         rs.on('data', function (data) {  
             let text = data.toString();  
-            let splitData = text.split(/[,\s]+/);  
+            let splitData = text.split(/[,\s]+/).filter(value => value.trim() !== '');
             dataArray = dataArray.concat(splitData);  
         });  
   

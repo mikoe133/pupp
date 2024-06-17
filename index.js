@@ -6,6 +6,7 @@ var fs = require("fs");
 const path = require('path');
 handleURLfn().then(dataArray => {
   Promise.all(dataArray.map(uurl => {
+    console.log("uurl是:",uurl);
     return getContentFromPage(uurl, tag)
       .then(content => {
         let folderPath = path.join(__dirname, '/target', tag.tag1);
@@ -22,6 +23,7 @@ handleURLfn().then(dataArray => {
         }
 
         let filePath = folderPath + '/' + content.title + ".txt";
+        
         if (fs.existsSync(filePath)) {
           console.log("文件已存在，跳过写入操作");
           return;
@@ -36,19 +38,22 @@ handleURLfn().then(dataArray => {
 
       })
       .catch(error => {
-        Errwritefile(uurl, error)
+        console.log("uurl是:",uurl);
+        (function (uurl) {
+          Errwritefile(uurl, error);
+        })(uurl);
       });
   })).then(() => {
     console.log('所有页面内容处理完成');
   }).catch(error => {
     console.error('Promise.all 捕获到错误:', error);
-    Errwritefile(uurl,error)
   });
 });
 
 async function getContentFromPage(uurl, tag) {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
+  await page.setDefaultNavigationTimeout(tag.TIME);
   await page.goto(uurl);
   const content = await page.evaluate((uurl, tag) => {
     let sourceCode = document.documentElement.outerHTML;

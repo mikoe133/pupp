@@ -22,7 +22,6 @@ handleURLfn().then(dataArray => {
         }
 
         let filePath = folderPath + '/' + content.title + ".txt";
-
         if (fs.existsSync(filePath)) {
           console.log("文件已存在，跳过写入操作");
           return;

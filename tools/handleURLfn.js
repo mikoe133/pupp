@@ -4,7 +4,6 @@ function handleURLfn() {
         let path = require('path');  
         let { tag } = require('../constants/constants');  
         let filePath1 = path.join(__dirname, '..', 'OriginURL', `${tag.tag1}.txt`);  
-  
         let rs = createReadStream(filePath1, {  
             highWaterMark: 10 * 1024 * 1024,  
         });  

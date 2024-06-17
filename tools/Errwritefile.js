@@ -1,7 +1,9 @@
 
 
-function errwritefile(uurl){
+function errwritefile(uurl,error){
     let { tag } = require('../constants/constants'); 
+    let fs = require('fs');
+    let path = require('path');
     let folderPath = path.join(__dirname, '..','err', tag.tag1);
 if (!fs.existsSync(folderPath)) {
   fs.mkdir(folderPath, { recursive: true }, err => {

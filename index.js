@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const {Errwritefile} = require('./tools/Errwritefile')
+const {errwritefile} = require('./tools/Errwritefile')
 const { tag } = require('./constants/constants');
 const { handleURLfn } = require('./tools/handleURLfn')
 var fs = require("fs");
@@ -37,13 +37,13 @@ handleURLfn().then(dataArray => {
 
       })
       .catch(error => {
-        Errwritefile(uurl, error)
+        errwritefile(uurl, error)
       });
   })).then(() => {
     console.log('所有页面内容处理完成');
   }).catch(error => {
     console.error('Promise.all 捕获到错误:', error);
-    Errwritefile(uurl,error)
+    errwritefile(uurl,error)
   });
 });
 

@@ -1,6 +1,6 @@
 
 
-function errwritefile(uurl,error){
+function Errwritefile(uurl,error){
     let { tag } = require('../constants/constants'); 
     let folderPath = path.join(__dirname, '..','err', tag.tag1);
 if (!fs.existsSync(folderPath)) {
@@ -21,6 +21,6 @@ fs.writeFile(folderPath + '/' + uurl+ ".txt", error, function (err) {
   console.log("err文件写入成功");
 });
 }
-module.exports = {errwritefile};
+module.exports = {Errwritefile};
 
 

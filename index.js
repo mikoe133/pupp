@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const {Errwritefile} = require('./tools/Errwritefile')
+const { Errwritefile } = require('./tools/Errwritefile')
 const { tag } = require('./constants/constants');
 const { handleURLfn } = require('./tools/handleURLfn')
 var fs = require("fs");
@@ -36,31 +36,64 @@ handleURLfn().then(dataArray => {
   });
 });
 
-async function getContentFromPage(uurl, tag) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.setDefaultNavigationTimeout(tag.TIME);
-  await page.goto(uurl);
-  const content = await page.evaluate((uurl, tag) => {
-    let sourceCode = document.documentElement.outerHTML;
-    let fullText = '';
-    const title = document.title;
-    if (sourceCode == null) {
-      console.log('无法爬取网站内容')
-    } else {
-      const chineseAndSymbolsContent = sourceCode.match(/[\u4e00-\u9fa5，。；，。！、？]{40,60}/g);
-      const tagLine = tag.tag1 ? `${tag.tag1}\n${tag.must}\n\n` : `${tag.must}\n\n`;
-      if (chineseAndSymbolsContent !== null && chineseAndSymbolsContent.length >= 2) {
-        fullText = uurl.trim() + '\n\n' + tagLine + title + '\n\n' + chineseAndSymbolsContent[Math.floor(Math.random() * chineseAndSymbolsContent.length)] + '\n\n' + chineseAndSymbolsContent[Math.floor(Math.random() * chineseAndSymbolsContent.length)] + '\n\n' + sourceCode;
-      } else {
-        fullText = uurl.trim() + '\n\n' + tagLine + title + '\n\n' + 'content内容未检索到或太短' + '\n\n' + sourceCode;
-      }
-    }
-    return {
-      fullText,
-      title
-    };
-  }, uurl, tag);
-  await browser.close();
-  return content;
-}
+  
+async function getContentFromPage(uurl, tag) {  
+  const browser = await puppeteer.launch();  
+  const page = await browser.newPage();  
+  await page.setDefaultNavigationTimeout(tag.TIME);  
+  await page.goto(uurl);  
+
+  // 收集文本内容并计算中文字符数量  
+  const { contentWithWeights, title ,soucecode} = await page.evaluate((tag,chineseRegex) => {  
+    // 初始化内容数组  
+    let content = [];  
+    let soucecode = document.documentElement.outerHTML;
+    // 用于检测是否包含中文字符的简单正则表达式  
+function containsChinese(text) {  
+  return /[\u4e00-\u9fa5]/.test(text);  
+}  
+    // 递归函数，用于遍历DOM元素  
+    function traverseDOM(node) {  
+      if (node.nodeType === Node.ELEMENT_NODE) {  
+        const tagName = node.tagName.toLowerCase();  
+        // 只处理p、div、h1、h2标签  
+        if (['p', 'div', 'h1', 'h2'].includes(tagName)) {  
+          const textContent = node.textContent.trim();  
+          if (containsChinese(textContent)) {  
+            // 计算中文字符数量（这里简化处理，只统计中文字符）  
+            const chineseCharsCount = (textContent.match(/[\u4e00-\u9fa5]/g) || []).length;  
+            if (chineseCharsCount > 0) {  
+              // 存储内容及其权重（这里权重为中文字符数量）  
+              content.push({ text: textContent, weight: chineseCharsCount });  
+            }  
+          }  
+        }  
+        // 递归遍历子元素  
+        for (let child = node.firstChild; child; child = child.nextSibling) {  
+          traverseDOM(child);  
+        }  
+      }  
+    }  
+  
+    // 从body开始遍历  
+    traverseDOM(document.body);  
+  
+    // 根据中文字符数量排序内容  
+    content.sort((a, b) => b.weight - a.weight);  
+  
+    // 返回排序后的内容列表和页面标题  
+    return { contentWithWeights: content, title: document.title,soucecode:soucecode };  
+  }, tag,/[\u4e00-\u9fa5]/);  
+  
+  // 假设我们只想要中文字符数量最多的两个内容片段  
+  const topContent = contentWithWeights.slice(0, 2).map(item => item.text).join('\n\n');  
+  
+  // 构建最终的文本内容  
+  const fullText = uurl.trim() + '\n\n' +  
+    (tag.tag1 ? `${tag.tag1}\n${tag.must}\n\n` : `${tag.must}\n\n`) +  
+    title + '\n\n' +  
+    (topContent.length > 0 ? topContent : 'content内容未检索到或太短') + '\n\n'+soucecode;  
+  
+  await browser.close();  
+  return { fullText, title };  
+}  
